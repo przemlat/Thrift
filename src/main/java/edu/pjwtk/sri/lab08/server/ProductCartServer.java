@@ -1,47 +1,55 @@
 package edu.pjwtk.sri.lab08.server;
 
+import edu.pjwstk.sri.lab08.ProductCart;
+import edu.pjwstk.sri.lab08.ProductListService;
+import org.apache.thrift.TMultiplexedProcessor;
 import org.apache.thrift.server.TServer;
-import org.apache.thrift.server.TServer.Args;
-import org.apache.thrift.server.TSimpleServer;
+import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
-
-import edu.pjwstk.sri.lab08.ProductCart;
 // Generated code
 
 public class ProductCartServer {
 
-	  public static ProductCartHandler handler;
+    public static ProductCartHandler handler;
+    public static ProductCart.Processor processor;
 
-	  public static ProductCart.Processor processor;
+    public static ProductListServiceHandler handlerForList;
+    public static ProductListService.Processor processorForList;
 
-	  public static void main(String [] args) {
-	    try {
-	      handler = new ProductCartHandler();
-	      processor = new ProductCart.Processor(handler);
+    public static void main(String[] args) {
+        try {
+            handler = new ProductCartHandler();
+            processor = new ProductCart.Processor(handler);
+            handlerForList = new ProductListServiceHandler();
+            processorForList = new ProductListService.Processor(handlerForList);
 
-	      Runnable simple = new Runnable() {
-	        public void run() {
-	          simple(processor);
-	        }
-	      };      
-	     
-	      new Thread(simple).start();
-	    } catch (Exception x) {
-	      x.printStackTrace();
-	    }
-	  }
+            Runnable multi = new Runnable() {
+                public void run() {
+                    multi(processor, processorForList);
+                }
+            };
 
-	  public static void simple(ProductCart.Processor processor) {
-	    try {
-	      TServerTransport serverTransport = new TServerSocket(9090);
-	      TServer server = new TSimpleServer(new Args(serverTransport).processor(processor));
+            new Thread(multi).start();
+        } catch (Exception x) {
+            x.printStackTrace();
+        }
+    }
 
-	      System.out.println("Starting the simple server...");
-	      server.serve();
-	    } catch (Exception e) {
-	      e.printStackTrace();
-	    }
-	  }
-	 
-	}
+    public static void multi(ProductCart.Processor processor, ProductListService.Processor processorForList) {
+        try {
+            TMultiplexedProcessor multiplexedProcessor = new TMultiplexedProcessor();
+            multiplexedProcessor.registerProcessor("ProductCart", processor);
+            multiplexedProcessor.registerProcessor("ProductListService", processorForList);
+
+            TServerTransport serverTransport = new TServerSocket(9090);
+            TServer server = new TThreadPoolServer(new TThreadPoolServer.Args(serverTransport).processor(multiplexedProcessor));
+
+            System.out.println("Starting the server...");
+            server.serve();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+}

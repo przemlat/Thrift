@@ -13,7 +13,10 @@ struct OrderItem {
 }
 
 service ProductListService {
-	list<Product> getProductsList()
+	list<Product> getProductsList(),
+	void stockMagazine(),
+	void addToMagazine(1:i64 productId, 2:i32 numberOfPieces)
+	void removeFromMagazine(1:i64 productId, 2:i32 numberOfPieces)
 }
 
 exception ProductNotAvailableException {

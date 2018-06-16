@@ -2,7 +2,7 @@ package edu.pjwtk.sri.lab08.server;
 
 import edu.pjwstk.sri.lab08.OrderItem;
 import edu.pjwstk.sri.lab08.ProductCart.Iface;
-import org.apache.commons.lang3.text.StrBuilder;
+import edu.pjwstk.sri.lab08.ProductNotAvailableException;
 import org.apache.thrift.TException;
 
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ public class ProductCartHandler implements Iface {
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @Override
-    public void addItem(OrderItem orderItem) throws TException {
+    public void addItem(OrderItem orderItem) throws TException, ProductNotAvailableException {
         orderItems.forEach(item -> {
             if (item.productId == orderItem.productId) {
                 item.setNumberOfPieces(item.getNumberOfPieces() + orderItem.getNumberOfPieces());
@@ -24,7 +24,7 @@ public class ProductCartHandler implements Iface {
     }
 
     @Override
-    public void removeFromCart(long productId) throws TException {
+    public void removeFromCart(long productId) throws TException, ProductNotAvailableException {
         orderItems.forEach(item -> {
             if (item.productId == productId) {
                 orderItems.remove(item);
@@ -35,7 +35,7 @@ public class ProductCartHandler implements Iface {
     }
 
     @Override
-    public void changeNumberOfPieces(OrderItem orderItem) throws TException {
+    public void changeNumberOfPieces(OrderItem orderItem) throws TException, ProductNotAvailableException {
         orderItems.forEach(item -> {
             if (item.productId == orderItem.productId) {
                 item.setNumberOfPieces(orderItem.numberOfPieces);
@@ -49,9 +49,8 @@ public class ProductCartHandler implements Iface {
     public String confirmOrder() throws TException {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Items in your cart: ");
-        orderItems.forEach(item -> {
-            stringBuilder.append(item.numberOfPieces + " of " + item.productId + "; ");
-        });
+        System.out.println(orderItems);
+        orderItems.forEach(item -> stringBuilder.append(item.numberOfPieces + " of " + item.productId + "; "));
         return stringBuilder.toString();
     }
 }
